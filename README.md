@@ -11,7 +11,7 @@ Let's start with a program that makes you a coffee – virtual coffee, of course
 #### Stage 1: Ingredient calculator
 Let's break the task into several steps:
 
-- [x]First, read the numbers of coffee drinks from the input.
+- [x] First, read the numbers of coffee drinks from the input.
 - [x]Figure out how much of each ingredient the machine will need. Note that one cup of coffee made on this coffee machine contains 200 ml of water, 50 ml of milk, and 15 g of coffee beans.
 - [x]Output the required ingredient amounts back to the user.
 
