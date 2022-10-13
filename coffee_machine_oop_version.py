@@ -127,10 +127,10 @@ class CoffeeMachine:
                 'What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:\n').strip().lower()
             if drink_ == 'back':
                 return self.menu()
-            elif drink_ not in [str(num) for num in range(len(self._available_drinks))]:
+            elif drink_ not in [str(num) for num in range(1, len(self._available_drinks) + 1)]:
                 print('Wrong option. Please, select again')
                 return None
-            drink = self._available_drinks[int(drink_)]
+            drink = self._available_drinks[int(drink_) - 1]
             self.buy(drink)
         elif user_choice == "remaining":
             print(self)
