@@ -1,151 +1,173 @@
+from collections import namedtuple
+
+Ingredient = namedtuple('Ingredient', ['cost', 'measurement', 'printable_name'], defaults=[0, None, None])
+
+
+class Drink:
+
+    def __init__(self,  water: Ingredient, milk: Ingredient, coffee_beans: Ingredient, disposable_cups: Ingredient,
+                 money: Ingredient, name: str) -> None:
+        self.water = water
+        self.milk = milk
+        self.coffee_beans = coffee_beans
+        self.disposable_cups = disposable_cups
+        self.money = money
+        self.name = name
+        self.__ingredients = (self.water, self.milk, self.coffee_beans, self.disposable_cups, self.money)
+
+    def __str__(self) -> str:
+        return f"Drink: {self.name}\n" \
+               f"{self.water.printable_name}: {self.water.cost, self.water.measurement}\n{self.milk.printable_name}: {self.milk.cost, self.milk.measurement}\n" \
+               f"{self.coffee_beans.printable_name}: {self.coffee_beans.cost, self.coffee_beans.measurement}\n" \
+               f"{self.disposable_cups.printable_name}: {self.disposable_cups.cost, self.disposable_cups.measurement}\n" \
+               f"{self.money.printable_name}: {self.money.cost, self.money.measurement}\n"
+
+    @property
+    def ingredients(self):
+        return self.__ingredients
+
+
+class Cappuccino(Drink):
+    pass
+
+
+class Espresso(Drink):
+    pass
+
+
+class Latte(Drink):
+    pass
+
+
 class CoffeeMachine:
 
-    def user_options(self):
+    def __init__(self, water=400, milk=540, coffee_beans=120, disposable_cups=9, money=550):
+        self.water = water
+        self.milk = milk
+        self.coffee_beans = coffee_beans
+        self.disposable_cups = disposable_cups
+        self.money = money
+        self._available_drinks = []
+        self.__ingredients = (self.water, self.milk, self.coffee_beans, self.disposable_cups, self.money)
+
+    def __str__(self):
+        return f"The coffee machine has:\n{self.water} of water\n" \
+               f"{self.milk} of milk\n{self.coffee_beans} of coffee beans\n" \
+               f"{self.disposable_cups} of disposable cups\n" \
+               f"${self.money} of money"
+
+    @property
+    def ingredients(self):
+        return self.__ingredients
+
+    def fill(self):
+        self.water += int(input('Write how many ml of water you want to add:\n'))
+        self.milk += int(input("Write how many ml of milk you want to add:\n"))
+        self.coffee_beans += int(input("Write how many grams of coffee beans you want to add:\n"))
+        self.disposable_cups += int(input("Write how many disposable coffee cups you want to add:\n"))
+
+    def buy(self, drink: Drink):
+        if isinstance(drink, Drink):
+            self.decrease_resources(drink)
+        else:
+            print(f'Sorry, drink should be an instance of <class Drink>. Given drink {type(drink)}')
+
+    def decrease_resources(self, drink: Drink) -> None:
+        if isinstance(drink, Drink) and drink in self._available_drinks:
+            for machine, drink_ in zip([self.water, self.milk, self.coffee_beans, self.disposable_cups], drink.ingredients):
+                is_possible_to_make_drink = self.control_resources(machine, drink_.cost)
+                if not is_possible_to_make_drink:
+                    print(f'Sorry, not enough {drink_.printable_name}')
+                    return None
+            print('I have enough resources, making you a coffee!')
+            self.water -= drink.water.cost
+            self.milk -= drink.milk.cost
+            self.coffee_beans -= drink.coffee_beans.cost
+            self.disposable_cups -= drink.disposable_cups.cost
+            self.money += drink.money.cost
+
+    @staticmethod
+    def control_resources(attribute, other_attribute):
+        if attribute - other_attribute >= 0:
+            return True
+        return False
+
+    def give_money(self):
+        print(f'I gave you ${self.money}')
+        self.money = 0
+
+    def add_drink(self, drinks: list[Drink]):
+        self._available_drinks.extend(drink for drink in drinks if isinstance(drink, Drink))
+
+    def remove_drink(self, drink: Drink):
+        if isinstance(drink, Drink) and drink in self._available_drinks:
+            self._available_drinks.pop(self._available_drinks.index(drink))
+        else:
+            print(f'Sorry, removed failed. Drink should be an instance of <class Drink> and been added to automate.Given drink {type(drink)}')
+
+    @staticmethod
+    def user_options():
         options = ['buy', 'fill', 'take', 'exit', 'remaining']
-        self.user_input = input('Write action (buy, fill, take, remaining, exit):\n')
-        if self.user_input in options:
-            return self.user_input
+        user_input = input('Write action (buy, fill, take, remaining, exit):\n').strip().lower()
+        while user_input not in options:
+            print('Wrong option. Please, select again')
+            user_input = input('Write action (buy, fill, take, remaining, exit):\n')
+        return user_input
+
+    def print_drinks(self):
+        for ind, drink in enumerate(self._available_drinks, 1):
+            print(f"{ind} - {drink.name}", end=', ')
+
+    def menu(self):
+        user_choice = self.user_options()
+        if user_choice == 'fill':
+            self.fill()
+        elif user_choice == 'buy':
+            drink_ = input(
+                'What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:\n').strip().lower()
+            if drink_ == 'back':
+                return self.menu()
+            elif drink_ not in [str(num) for num in range(len(self._available_drinks))]:
+                print('Wrong option. Please, select again')
+                return None
+            drink = self._available_drinks[int(drink_)]
+            self.buy(drink)
+        elif user_choice == "remaining":
+            print(self)
+        elif user_choice == 'exit':
+            exit()
+        elif user_choice == 'take':
+            self.give_money()
         else:
             print('Wrong option. Please, select again')
-            return self.user_options()
-
-    def calculate_ingredients_needed_for_coffee(self):
-        espresso = {'water': (250, 'ml'), 'milk': (0, 'ml'), 'coffee beans': (16, 'g'), 'money': (4, 'dollars'), 'disposable cups': (1, 'sht')}
-        latte = {'water': (350, 'ml'), 'milk': (75, 'ml'), 'coffee beans': (20, 'g'), 'money': (7, 'dollars'), 'disposable cups': (1, 'sht')}
-        cappuccino = {'water': (200, 'ml'), 'milk': (100, 'ml'), 'coffee beans': (12, 'g'), 'money': (6, 'dollars'), 'disposable cups': (1, 'sht')}
-        ingredients = [espresso, latte, cappuccino]
-        return ingredients
-
-    def available_ingredients(self):
-        self.ingredients_available = {'water': [400, 'ml'], 'milk': [540, 'ml'], 'coffee beans': [120, 'g'], 'disposable cups': [9, 'sht'], 'money': [550, 'dollars']}
-        #ingredients_available.setdefault('water', (int(input('Write how many ml of water the coffee machine has:\n')), 'ml'))
-        #ingredients_available.setdefault('milk', (int(input('Write how many ml of milk the coffee machine has:\n')), 'ml'))
-        #ingredients_available.setdefault('coffee beans', (int(input('Write how many grams of coffee beans the coffee machine has:\n')), 'g'))
-        return self.ingredients_available
-
-    def buying_coffee(self, ingredients_available):
-        espresso = {'water': (250, 'ml'), 'milk': (0, 'ml'), 'coffee beans': (16, 'g'), 'money': (4, 'dollars'),
-                    'disposable cups': (1, 'sht')}
-        latte = {'water': (350, 'ml'), 'milk': (75, 'ml'), 'coffee beans': (20, 'g'), 'money': (7, 'dollars'),
-                 'disposable cups': (1, 'sht')}
-        cappuccino = {'water': (200, 'ml'), 'milk': (100, 'ml'), 'coffee beans': (12, 'g'), 'money': (6, 'dollars'),
-                      'disposable cups': (1, 'sht')}
-
-        user_choice = input('What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:\n')
-        if user_choice == "back":
-            return ingredients_available
-        elif int(user_choice) == 1:
-            result_of_check, cur_key = self.check(espresso, ingredients_available)
-            if result_of_check == 'I have enough resources, making you a coffee!':
-                print('I have enough resources, making you a coffee!')
-                ingredients_available = self.calculation_suppliers(espresso, ingredients_available)
-                return ingredients_available
-            print(f'Sorry, not enough {cur_key}!')
-            return ingredients_available
-        elif int(user_choice) == 2:
-            result_of_check, cur_key = self.check(latte, ingredients_available)
-            if result_of_check == "I have enough resources, making you a coffee!":
-                print('I have enough resources, making you a coffee!')
-                ingredients_available = self.calculation_suppliers(latte, ingredients_available)
-                return ingredients_available
-            print(f'Sorry, not enough {cur_key}!')
-            return ingredients_available
-        elif int(user_choice) == 3:
-            result_of_check, cur_key = self.check(cappuccino, ingredients_available)
-            if result_of_check == 'I have enough resources, making you a coffee!':
-                print('I have enough resources, making you a coffee!')
-                ingredients_available = self.calculation_suppliers(cappuccino, ingredients_available)
-                return ingredients_available
-            print(f'Sorry, not enough {cur_key}!')
-            return ingredients_available
-        else:
-            print('Wrong choice. Please, select again')
-        return buying_coffee(ingredients_available)
-
-    def check(self, ingredient, ingredients_available):
-        self.cur_key = ''
-        for key in ingredient.keys():
-            if key != 'money':
-                if ingredients_available[key][0] - ingredient[key][0] < 0:
-                    self.cur_key = key
-                    return f'Sorry, not enough {key}!', self.cur_key
-        return 'I have enough resources, making you a coffee!', self.cur_key
-
-    def calculation_suppliers(self, ingredient, ingredients_available):
-        for key in ingredient.keys():
-            if key != 'money':
-                ingredients_available[key][0] = ingredients_available[key][0] - ingredient[key][0]
-            else:
-                ingredients_available[key][0] = ingredients_available[key][0] + ingredient[key][0]
-        return ingredients_available
-
-    def filling_automate(self, ingredients_available):
-        ingredients_available['water'][0] += int(input('Write how many ml of water you want to add:\n'))
-        ingredients_available['milk'][0] += int(input("Write how many ml of milk you want to add:\n"))
-        ingredients_available['coffee beans'][0] += int(input("Write how many grams of coffee beans you want to add:\n"))
-        ingredients_available['disposable cups'][0] += int(input("Write how many disposable coffee cups you want to add:\n"))
-        return ingredients_available
-
-    def take_money(self, ingredients_available):
-        print(f'I gave you ${ingredients_available["money"][0]}')
-        ingredients_available['money'][0] = 0
-        return ingredients_available
-
-    def printing_ingredients(self, ingredients_in_stock):
-        print('The coffee machine has:')
-        for key in ingredients_in_stock.keys():
-            if key != "money":
-                print(f'{ingredients_in_stock[key][0]} of {key}')
-            else:
-                print(f'${ingredients_in_stock[key][0]} of {key}')
-        return ''
-
-    # not used now, can be used for multiple cups options
-    def calculation(self, water_available, milk_available, coffee_beans_available):
-        cups, water, milk, coffee_beans = 0, 0, 0, 0
-        ingredients_for_one_cup = calculate_ingredients_needed_for_coffee()
-        while water <= water_available and milk <= milk_available and coffee_beans <= coffee_beans_available:
-            water += ingredients_for_one_cup['water'][0]
-            milk += ingredients_for_one_cup['milk'][0]
-            coffee_beans += ingredients_for_one_cup['coffee beans'][0]
-            cups += 1
-        if water > water_available or milk > milk_available or coffee_beans > coffee_beans_available:
-            cups -= 1
-        return cups
-
-    # not used now, can be used for multiple cups options
-    def check_if_possible_to_make_coffee(self, ingredients_available):
-        user_input = how_many_coffee_needed()
-        water_available = ingredients_available["water"][0]
-        milk_available = ingredients_available["milk"][0]
-        coffee_beans_available = ingredients_available["coffee beans"][0]
-        cups = calculation(water_available, milk_available, coffee_beans_available)
-        if cups > user_input:
-            return f"Yes, I can make that amount of coffee (and even {cups - user_input} more than that)"
-        elif cups == user_input:
-            return f"Yes, I can make that amount of coffee"
-        else:
-            return f"No, I can make only {cups} cups of coffee"
-
-    def operations_with_automate(self):
-        self.ingredients = self.available_ingredients()
-        self.user_input = self.user_options()
-        while self.user_input != 'exit':
-            if self.user_input == 'fill':
-                self.ingredients = self.filling_automate(self.ingredients)
-                # printing_ingredients(ingredients)
-            elif self.user_input == 'buy':
-                self.ingredients = self.buying_coffee(self.ingredients)
-                # printing_ingredients(ingredients)
-            elif self.user_input == "take":
-                self.ingredients = self.take_money(self.ingredients)
-                # printing_ingredients(ingredients)
-            elif self.user_input == "remaining":
-                self.printing_ingredients(self.ingredients)
-            self.user_input = self.user_options()
-
-        return ''
 
 
-coffee_machine = CoffeeMachine()
-coffee_machine.operations_with_automate()
+
+
+def main():
+    coffee_machine = CoffeeMachine()
+    cappuccino = Cappuccino(water=Ingredient(200, 'ml', 'water'),
+                            milk=Ingredient(100, 'ml', 'milk'),
+                            coffee_beans=Ingredient(12, 'g', 'coffee beans'),
+                            money=Ingredient(6, 'dollars', 'money'),
+                            disposable_cups=Ingredient(1, 'sht', 'disposable cups'),
+                            name='cappuccino')
+    latte = Latte(water=Ingredient(350, 'ml', 'water'),
+                  milk=Ingredient(75, 'ml', 'milk'),
+                  coffee_beans=Ingredient(20, 'g', 'coffee beans'),
+                  money=Ingredient(7, 'dollars', 'money'),
+                  disposable_cups=Ingredient(1, 'sht', 'disposable cups'),
+                  name='latte')
+    espresso = Espresso(water=Ingredient(250, 'ml', 'water'),
+                        milk=Ingredient(0, 'ml', 'milk'),
+                        coffee_beans=Ingredient(16, 'g', 'coffee beans'),
+                        money=Ingredient(4, 'dollars', 'money'),
+                        disposable_cups=Ingredient(1, 'sht', 'disposable cups'),
+                        name='espresso')
+    coffee_machine.add_drink([cappuccino, latte, espresso])
+    while True:
+        coffee_machine.menu()
+
+
+if __name__ == "__main__":
+    main()
