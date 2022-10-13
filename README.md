@@ -1,8 +1,6 @@
 # coffee_machine
 ## Project that simulates the work of the coffee machine. 
-Here are 2 versions: 
-- based on OOP paradigm (lol): 'coffee_machine_oop_version.py'
-- based on functional paradigm: 'coffee_machine_functional_version'
+
 
 ### Description
 Let's start with a program that makes you a coffee – virtual coffee, of course. In this project, you will implement functionality that simulates a real coffee machine. It can run out of ingredients, such as milk or coffee beans, it can offer you various types of coffee, and, finally, it will take money for the prepared drink.
