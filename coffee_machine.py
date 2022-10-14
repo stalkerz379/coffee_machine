@@ -28,15 +28,18 @@ class Drink:
 
 
 class Cappuccino(Drink):
-    pass
+    def __init__(self, water, milk, coffee_beans, disposable_cups, money, name):
+        super(Cappuccino, self).__init__(water, milk, coffee_beans, disposable_cups, money, name)
 
 
 class Espresso(Drink):
-    pass
+    def __init__(self, water, milk, coffee_beans, disposable_cups, money, name):
+        super().__init__(water, milk, coffee_beans, disposable_cups, money, name)
 
 
 class Latte(Drink):
-    pass
+    def __init__(self, water, milk, coffee_beans, disposable_cups, money, name):
+        super().__init__(water, milk, coffee_beans, disposable_cups, money, name)
 
 
 class CoffeeMachine:
@@ -120,28 +123,27 @@ class CoffeeMachine:
 
     def menu(self):
         user_choice = self.user_options()
-        if user_choice == 'fill':
-            self.fill()
-        elif user_choice == 'buy':
-            drink_ = input(
-                'What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:\n').strip().lower()
-            if drink_ == 'back':
-                return self.menu()
-            elif drink_ not in [str(num) for num in range(1, len(self._available_drinks) + 1)]:
+        match user_choice:
+            case 'fill':
+                self.fill()
+            case 'remaining':
+                print(self)
+            case 'take':
+                self.give_money()
+            case 'exit':
+                exit()
+            case 'buy':
+                drink_ = input(
+                    'What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:\n').strip().lower()
+                if drink_ == 'back':
+                    return self.menu()
+                elif drink_ not in [str(num) for num in range(1, len(self._available_drinks) + 1)]:
+                    print('Wrong option. Please, select again')
+                    return None
+                drink = self._available_drinks[int(drink_) - 1]
+                self.buy(drink)
+            case _:
                 print('Wrong option. Please, select again')
-                return None
-            drink = self._available_drinks[int(drink_) - 1]
-            self.buy(drink)
-        elif user_choice == "remaining":
-            print(self)
-        elif user_choice == 'exit':
-            exit()
-        elif user_choice == 'take':
-            self.give_money()
-        else:
-            print('Wrong option. Please, select again')
-
-
 
 
 def main():
